@@ -1,0 +1,14 @@
+{
+  "name": "Vistorias a Receber",
+  "short_name": "Vistorias",
+  "description": "Controle de vistorias realizadas e valores a receber",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#efeee1",
+  "theme_color": "#efeee1",
+  "icons": [
+    { "src": "/icon.svg", "type": "image/svg+xml", "sizes": "any", "purpose": "any maskable" }
+  ]
+}
