@@ -6,10 +6,14 @@ import { apiGet } from '@/lib/api';
 
 export default function ExtratoPage() {
   const [email, setEmail] = useState('');
+  const [nome, setNome] = useState<string | null>(null);
 
   useEffect(() => {
-    apiGet<{ email: string }>('/api/me')
-      .then((d) => setEmail(d.email || ''))
+    apiGet<{ email: string; name: string | null }>('/api/me')
+      .then((d) => {
+        setEmail(d.email || '');
+        setNome(d.name ?? null);
+      })
       .catch(() => {});
   }, []);
 
@@ -17,7 +21,7 @@ export default function ExtratoPage() {
     <div>
       <div className="pageTitle">Extrato</div>
       <div className="pageSub">Vistorias por período — com exportação em PDF</div>
-      <ExtratoView fetchBase="/api/inspections" contaEmail={email} />
+      <ExtratoView fetchBase="/api/inspections" contaEmail={email} contaNome={nome} />
     </div>
   );
 }

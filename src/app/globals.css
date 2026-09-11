@@ -573,6 +573,6 @@ input[type="time"].input::-webkit-calendar-picker-indicator {
   }
   .table.adminAccounts .thead,
   .table.adminAccounts .tr {
-    grid-template-columns: minmax(200px, 1fr) 78px 96px 78px 112px 92px 156px;
+    grid-template-columns: minmax(200px, 1fr) 74px 92px 76px 108px 88px 250px;
   }
 }

@@ -12,7 +12,7 @@ export async function GET(req: Request) {
 
     const { data: accounts, error } = await sb
       .from('accounts')
-      .select('id,email,role,is_active,created_at')
+      .select('id,email,name,role,is_active,created_at')
       .order('created_at', { ascending: true });
     if (error) throw error;
 

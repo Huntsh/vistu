@@ -72,3 +72,40 @@ export async function POST(req: Request) {
     return errorResponse(e, 'Erro ao salvar vistoria.');
   }
 }
+
+/**
+ * Apaga vistorias da própria conta dentro de um período. Exige from E to —
+ * nunca apaga "tudo" por omissão dos parâmetros.
+ */
+export async function DELETE(req: Request) {
+  try {
+    const acc = await requireAccount(req);
+    const { searchParams } = new URL(req.url);
+    const from = searchParams.get('from')?.trim();
+    const to = searchParams.get('to')?.trim();
+
+    if (!from || !to || !ISO_DATE.test(from) || !ISO_DATE.test(to)) {
+      return NextResponse.json(
+        { error: 'Informe um período (de/até) válido para apagar.' },
+        { status: 400 },
+      );
+    }
+    if (from > to) {
+      return NextResponse.json({ error: '"De" não pode ser depois de "Até".' }, { status: 400 });
+    }
+
+    const sb = getSupabase();
+    const { data, error } = await sb
+      .from('inspections')
+      .delete()
+      .eq('account_id', acc.id)
+      .gte('data_vistoria', from)
+      .lte('data_vistoria', to)
+      .select('id');
+    if (error) throw error;
+
+    return NextResponse.json({ ok: true, deleted: (data ?? []).length });
+  } catch (e) {
+    return errorResponse(e, 'Erro ao apagar os lançamentos do período.');
+  }
+}

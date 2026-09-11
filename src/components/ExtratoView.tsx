@@ -44,9 +44,11 @@ const PRESETS: Preset[] = [
 export default function ExtratoView({
   fetchBase,
   contaEmail,
+  contaNome,
 }: {
   fetchBase: string;
   contaEmail: string;
+  contaNome?: string | null;
 }) {
   const [from, setFrom] = useState(firstOfMonthISO);
   const [to, setTo] = useState(todayISO);
@@ -108,6 +110,7 @@ export default function ExtratoView({
     try {
       await buildExtratoPdf(filtered, {
         contaEmail,
+        contaNome,
         from,
         to,
         imobiliaria: fImob || undefined,

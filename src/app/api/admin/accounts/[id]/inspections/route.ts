@@ -23,7 +23,7 @@ export async function GET(req: Request, { params }: Ctx) {
 
     const { data: acc, error: accErr } = await sb
       .from('accounts')
-      .select('id,email,role,is_active,created_at')
+      .select('id,email,name,role,is_active,created_at')
       .eq('id', params.id)
       .maybeSingle();
     if (accErr) throw accErr;

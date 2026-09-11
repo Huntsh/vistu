@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
+import Avatar from '@/components/Avatar';
 import { apiGet, apiSend } from '@/lib/api';
 import { calcValor, DEFAULT_SETTINGS } from '@/lib/calc';
-import type { Settings } from '@/lib/types';
+import type { Inspection, Settings } from '@/lib/types';
 import { formatBRL, parseNumberBR, toInputNumber } from '@/lib/format';
 
 type FormState = Record<keyof Settings, string>;
@@ -52,6 +53,45 @@ function toForm(s: Settings): FormState {
 }
 
 export default function ConfiguracoesPage() {
+  // ── Perfil (nome + avatar) ──────────────────────────────────────────────
+  const [me, setMe] = useState<{ email: string; role: 'user' | 'admin'; name: string | null } | null>(
+    null,
+  );
+  const [nameInput, setNameInput] = useState('');
+  const [savingName, setSavingName] = useState(false);
+  const [profileMsg, setProfileMsg] = useState('');
+  const [profileErr, setProfileErr] = useState('');
+
+  useEffect(() => {
+    apiGet<{ email: string; role: 'user' | 'admin'; name: string | null }>('/api/me')
+      .then((d) => {
+        setMe(d);
+        setNameInput(d.name ?? '');
+      })
+      .catch(() => {});
+  }, []);
+
+  async function saveName(e: React.FormEvent) {
+    e.preventDefault();
+    setProfileErr('');
+    setProfileMsg('');
+    setSavingName(true);
+    try {
+      const d = await apiSend<{ email: string; role: 'user' | 'admin'; name: string | null }>(
+        '/api/me',
+        'PATCH',
+        { name: nameInput },
+      );
+      setMe(d);
+      setProfileMsg('Nome salvo.');
+    } catch (e: any) {
+      setProfileErr(e?.message || 'Erro ao salvar o nome.');
+    } finally {
+      setSavingName(false);
+    }
+  }
+
+  // ── Tabela de preços (já existia) ───────────────────────────────────────
   const [form, setForm] = useState<FormState | null>(null);
   const [saving, setSaving] = useState(false);
   const [recalcing, setRecalcing] = useState(false);
@@ -135,6 +175,74 @@ export default function ConfiguracoesPage() {
     }
   }
 
+  // ── Apagar lançamentos por período ──────────────────────────────────────
+  const [clearFrom, setClearFrom] = useState('');
+  const [clearTo, setClearTo] = useState('');
+  const [clearCount, setClearCount] = useState<number | null>(null);
+  const [checkingClear, setCheckingClear] = useState(false);
+  const [confirmClear, setConfirmClear] = useState(false);
+  const [clearing, setClearing] = useState(false);
+  const [clearMsg, setClearMsg] = useState('');
+  const [clearErr, setClearErr] = useState('');
+
+  async function checkClear() {
+    setClearErr('');
+    setClearMsg('');
+    setClearCount(null);
+    setConfirmClear(false);
+    if (!clearFrom || !clearTo) {
+      setClearErr('Escolha as duas datas (de/até).');
+      return;
+    }
+    setCheckingClear(true);
+    try {
+      const d = await apiGet<{ inspections: Inspection[] }>(
+        `/api/inspections?from=${clearFrom}&to=${clearTo}`,
+      );
+      setClearCount(d.inspections.length);
+    } catch (e: any) {
+      setClearErr(e?.message || 'Erro ao verificar o período.');
+    } finally {
+      setCheckingClear(false);
+    }
+  }
+
+  async function doClear() {
+    setClearErr('');
+    setClearing(true);
+    try {
+      const d = await apiSend<{ deleted: number }>(
+        `/api/inspections?from=${clearFrom}&to=${clearTo}`,
+        'DELETE',
+      );
+      setClearMsg(`${d.deleted} lançamento(s) apagado(s).`);
+      setClearCount(null);
+      setConfirmClear(false);
+    } catch (e: any) {
+      setClearErr(e?.message || 'Erro ao apagar os lançamentos.');
+    } finally {
+      setClearing(false);
+    }
+  }
+
+  // ── Excluir a própria conta ─────────────────────────────────────────────
+  const [deleteEmailInput, setDeleteEmailInput] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [deleteErr, setDeleteErr] = useState('');
+
+  async function deleteAccount() {
+    if (!me) return;
+    setDeleteErr('');
+    setDeleting(true);
+    try {
+      await apiSend('/api/account', 'DELETE');
+      window.location.href = '/login';
+    } catch (e: any) {
+      setDeleteErr(e?.message || 'Erro ao excluir a conta.');
+      setDeleting(false);
+    }
+  }
+
   if (!form) {
     return (
       <div>
@@ -149,13 +257,41 @@ export default function ConfiguracoesPage() {
   return (
     <div>
       <div className="pageTitle">Configurações</div>
-      <div className="pageSub">Tabela de preços das vistorias</div>
+      <div className="pageSub">Perfil, tabela de preços e gestão dos seus dados</div>
 
-      {err && <div className="error">{err}</div>}
-      {msg && <div className="notice">{msg}</div>}
+      <div className="sectionTitle">Seu perfil</div>
+      <div className="panel">
+        {profileErr && <div className="error">{profileErr}</div>}
+        {profileMsg && <div className="notice">{profileMsg}</div>}
+        <form onSubmit={saveName} style={{ display: 'flex', gap: 14, alignItems: 'flex-end', flexWrap: 'wrap' }}>
+          <Avatar name={me?.name ?? nameInput} email={me?.email ?? ''} size={48} />
+          <div className="field" style={{ flex: '1 1 220px', margin: 0 }}>
+            <label htmlFor="perfilNome">Nome</label>
+            <input
+              id="perfilNome"
+              className="input"
+              value={nameInput}
+              onChange={(e) => setNameInput(e.target.value)}
+              placeholder="Como quer aparecer no extrato/PDF"
+              maxLength={80}
+              autoComplete="name"
+            />
+            <span className="hint">
+              {me?.email}
+              {me?.role === 'admin' ? ' · Administrador' : ''}
+            </span>
+          </div>
+          <button type="submit" className="btn btn--primary btn--sm" disabled={savingName}>
+            {savingName ? <span className="spin" /> : 'Salvar nome'}
+          </button>
+        </form>
+      </div>
 
+      <div className="sectionTitle">Tabela de preços</div>
       <form onSubmit={save}>
         <div className="panel">
+          {err && <div className="error">{err}</div>}
+          {msg && <div className="notice">{msg}</div>}
           {FIELDS.map((f) => (
             <div className="field" key={f.key}>
               <label htmlFor={f.key}>{f.label}</label>
@@ -225,6 +361,108 @@ export default function ConfiguracoesPage() {
           </button>
         )}
       </div>
+
+      <div className="sectionTitle">Apagar lançamentos por período</div>
+      <div className="panel">
+        <p style={{ marginTop: 0, fontSize: 13 }} className="muted">
+          Apaga só as vistorias lançadas dentro do período escolhido. Não afeta a tabela de preços
+          nem outras datas.
+        </p>
+        {clearErr && <div className="error">{clearErr}</div>}
+        {clearMsg && <div className="notice">{clearMsg}</div>}
+
+        <div className="form-grid two">
+          <div className="field">
+            <label htmlFor="clearFrom">De</label>
+            <input
+              id="clearFrom"
+              type="date"
+              className="input"
+              value={clearFrom}
+              max={clearTo || undefined}
+              onChange={(e) => {
+                setClearFrom(e.target.value);
+                setClearCount(null);
+                setConfirmClear(false);
+              }}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="clearTo">Até</label>
+            <input
+              id="clearTo"
+              type="date"
+              className="input"
+              value={clearTo}
+              min={clearFrom || undefined}
+              onChange={(e) => {
+                setClearTo(e.target.value);
+                setClearCount(null);
+                setConfirmClear(false);
+              }}
+            />
+          </div>
+        </div>
+
+        {clearCount === null ? (
+          <button
+            className="btn btn--ghost btn--block"
+            onClick={checkClear}
+            disabled={checkingClear || !clearFrom || !clearTo}
+          >
+            {checkingClear ? <span className="spin" /> : 'Ver quantos serão apagados'}
+          </button>
+        ) : clearCount === 0 ? (
+          <div className="empty">Nenhum lançamento nesse período.</div>
+        ) : confirmClear ? (
+          <div className="confirmRow" style={{ justifyContent: 'flex-start' }}>
+            <span>Apagar {clearCount} lançamento(s) desse período? Não tem como desfazer.</span>
+            <button className="btn btn--ghost btn--sm" onClick={() => setConfirmClear(false)} disabled={clearing}>
+              Cancelar
+            </button>
+            <button className="btn btn--danger btn--sm" onClick={doClear} disabled={clearing}>
+              {clearing ? <span className="spin" /> : 'Sim, apagar'}
+            </button>
+          </div>
+        ) : (
+          <button className="btn btn--danger btn--block" onClick={() => setConfirmClear(true)}>
+            Apagar {clearCount} lançamento(s) desse período
+          </button>
+        )}
+      </div>
+
+      {me && me.role !== 'admin' && (
+        <>
+          <div className="sectionTitle">Excluir minha conta</div>
+          <div className="panel" style={{ borderColor: 'var(--bad)' }}>
+            <p style={{ marginTop: 0, fontSize: 13 }} className="muted">
+              Apaga sua conta, login, tabela de preços e <strong>todas as suas vistorias</strong> —
+              para sempre, sem como desfazer. Para confirmar, digite seu e-mail (
+              <strong>{me.email}</strong>) abaixo.
+            </p>
+            {deleteErr && <div className="error">{deleteErr}</div>}
+            <div className="field">
+              <label htmlFor="delEmail">Seu e-mail</label>
+              <input
+                id="delEmail"
+                className="input"
+                value={deleteEmailInput}
+                onChange={(e) => setDeleteEmailInput(e.target.value)}
+                placeholder={me.email}
+                autoComplete="off"
+                autoCapitalize="none"
+              />
+            </div>
+            <button
+              className="btn btn--danger btn--block"
+              onClick={deleteAccount}
+              disabled={deleting || deleteEmailInput.trim().toLowerCase() !== me.email.toLowerCase()}
+            >
+              {deleting ? <span className="spin" /> : 'Excluir minha conta definitivamente'}
+            </button>
+          </div>
+        </>
+      )}
 
       <button
         className="btn btn--ghost btn--block"

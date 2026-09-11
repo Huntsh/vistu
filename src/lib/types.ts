@@ -20,6 +20,7 @@ export interface Inspection {
 export interface Account {
   id: string;
   email: string;
+  name: string | null;
   role: Role;
   is_active: boolean;
   created_at: string;

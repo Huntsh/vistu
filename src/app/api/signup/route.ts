@@ -15,6 +15,7 @@ export async function POST(req: Request) {
   const body = await req.json().catch(() => ({}));
   const email = normEmail(body?.email);
   const password = typeof body?.password === 'string' ? body.password : '';
+  const name = typeof body?.name === 'string' ? body.name.trim().slice(0, 80) : '';
 
   if (!process.env.AUTH_SECRET) {
     return NextResponse.json({ error: 'Servidor sem AUTH_SECRET configurado.' }, { status: 500 });
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
     const password_hash = await hashPassword(password);
     const { data: acc, error } = await sb
       .from('accounts')
-      .insert({ email, password_hash, role: 'user', is_active: true })
+      .insert({ email, password_hash, name: name || null, role: 'user', is_active: true })
       .select('*')
       .single();
     if (error) {

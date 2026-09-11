@@ -7,6 +7,7 @@ import { apiSend } from '@/lib/api';
 
 export default function SignupPage() {
   const [email, setEmail] = useState('');
+  const [name, setName] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -25,7 +26,7 @@ export default function SignupPage() {
     }
     setLoading(true);
     try {
-      await apiSend('/api/signup', 'POST', { email, password });
+      await apiSend('/api/signup', 'POST', { email, name, password });
       window.location.href = '/';
     } catch (e: any) {
       setErr(e?.message || 'Não foi possível criar a conta.');
@@ -56,6 +57,18 @@ export default function SignupPage() {
                 autoCapitalize="none"
                 autoFocus
                 required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="name">Nome (opcional)</label>
+              <input
+                id="name"
+                type="text"
+                className="input"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                autoComplete="name"
+                maxLength={80}
               />
             </div>
             <div className="field">

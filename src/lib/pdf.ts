@@ -11,6 +11,7 @@ import { porImobiliaria, totals } from './aggregate';
 
 export interface ExtratoMeta {
   contaEmail: string;
+  contaNome?: string | null;
   from: string; // YYYY-MM-DD
   to: string; // YYYY-MM-DD
   imobiliaria?: string;
@@ -35,8 +36,11 @@ export async function buildExtratoPdf(rows: Inspection[], meta: ExtratoMeta): Pr
 
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(10);
+  const contaLabel = meta.contaNome?.trim()
+    ? `${meta.contaNome.trim()} — ${meta.contaEmail || '—'}`
+    : meta.contaEmail || '—';
   const info = [
-    `Conta: ${meta.contaEmail || '—'}`,
+    `Conta: ${contaLabel}`,
     `Período: ${formatDateBR(meta.from)} a ${formatDateBR(meta.to)}`,
   ];
   const filtros: string[] = [];

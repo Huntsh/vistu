@@ -16,6 +16,7 @@ create table if not exists accounts (
   id            uuid primary key default gen_random_uuid(),
   email         text        not null unique,          -- sempre gravado em minúsculas
   password_hash text        not null,                 -- PBKDF2-SHA256 (feito no app)
+  name          text,                                 -- opcional, mostrado no PDF e no avatar
   role          text        not null default 'user' check (role in ('user','admin')),
   is_active     boolean     not null default true,
   created_at    timestamptz not null default now()

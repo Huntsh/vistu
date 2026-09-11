@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import nextDynamic from 'next/dynamic';
 import Link from 'next/link';
+import Avatar from '@/components/Avatar';
 import ExtratoView from '@/components/ExtratoView';
 import type { Account, Inspection } from '@/lib/types';
 import { apiGet } from '@/lib/api';
@@ -54,12 +55,15 @@ export default function AdminContaPage({ params }: { params: { id: string } }) {
           ← Contas
         </Link>
       </div>
-      <div className="pageTitle">{account?.email ?? 'Conta'}</div>
+      <div className="pageTitle" style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        {account && <Avatar name={account.name} email={account.email} size={30} />}
+        {account?.name || account?.email || 'Conta'}
+      </div>
       <div className="pageSub">
         {account
-          ? `${account.role === 'admin' ? 'Administrador' : 'Usuário'} · ${
-              account.is_active ? 'ativa' : 'desativada'
-            } · somente leitura`
+          ? `${account.name ? account.email + ' · ' : ''}${
+              account.role === 'admin' ? 'Administrador' : 'Usuário'
+            } · ${account.is_active ? 'ativa' : 'desativada'} · somente leitura`
           : 'Carregando…'}
       </div>
 
@@ -69,6 +73,7 @@ export default function AdminContaPage({ params }: { params: { id: string } }) {
       <ExtratoView
         fetchBase={`/api/admin/accounts/${id}/inspections`}
         contaEmail={account?.email ?? ''}
+        contaNome={account?.name}
       />
 
       <div className="sectionTitle" style={{ marginTop: 28 }}>

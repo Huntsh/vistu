@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import TapeRuler from './TapeRuler';
+import Avatar from './Avatar';
 import { IconChart, IconDoc, IconGear, IconList, IconRuler, IconShield } from './icons';
 import { apiGet } from '@/lib/api';
 
@@ -16,12 +17,14 @@ const NAV = [
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
-  const [me, setMe] = useState<{ email: string; role: 'user' | 'admin' } | null>(null);
+  const [me, setMe] = useState<{ email: string; role: 'user' | 'admin'; name: string | null } | null>(
+    null,
+  );
   // Lançamentos e Extrato têm tabela larga (com Ações): dá mais espaço nessas.
   const wide = path === '/' || path.startsWith('/extrato');
 
   useEffect(() => {
-    apiGet<{ email: string; role: 'user' | 'admin' }>('/api/me')
+    apiGet<{ email: string; role: 'user' | 'admin'; name: string | null }>('/api/me')
       .then(setMe)
       .catch(() => {});
   }, []);
@@ -35,27 +38,33 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
             <span className="mk">Vistorias</span>
             <span className="sub">valores a receber</span>
           </div>
-          {me?.role === 'admin' && (
-            <Link
-              href="/admin"
-              style={{
-                marginLeft: 'auto',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 6,
-                fontSize: 12,
-                fontWeight: 700,
-                textDecoration: 'none',
-                border: '1.5px solid var(--ink)',
-                borderRadius: 'var(--radius)',
-                padding: '5px 9px',
-                color: 'var(--ink)',
-                background: 'var(--tape)',
-              }}
-            >
-              <IconShield width={15} height={15} /> Admin
-            </Link>
-          )}
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 8 }}>
+            {me?.role === 'admin' && (
+              <Link
+                href="/admin"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  fontSize: 12,
+                  fontWeight: 700,
+                  textDecoration: 'none',
+                  border: '1.5px solid var(--ink)',
+                  borderRadius: 'var(--radius)',
+                  padding: '5px 9px',
+                  color: 'var(--ink)',
+                  background: 'var(--tape)',
+                }}
+              >
+                <IconShield width={15} height={15} /> Admin
+              </Link>
+            )}
+            {me && (
+              <Link href="/configuracoes" title={me.name || me.email} aria-label="Seu perfil">
+                <Avatar name={me.name} email={me.email} size={30} />
+              </Link>
+            )}
+          </div>
         </div>
         <TapeRuler />
       </header>
