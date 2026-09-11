@@ -17,6 +17,13 @@ export function getSupabase(): SupabaseClient {
 
   client = createClient(url, key, {
     auth: { persistSession: false, autoRefreshToken: false },
+    // O Next.js (App Router) intercepta o `fetch` global e pode cachear as
+    // chamadas REST do supabase-js mesmo em rotas `force-dynamic`. Forçamos
+    // no-store aqui pra garantir que toda consulta seja sempre ao vivo.
+    global: {
+      fetch: (input: RequestInfo | URL, init?: RequestInit) =>
+        fetch(input, { ...init, cache: 'no-store' }),
+    },
   });
   return client;
 }
