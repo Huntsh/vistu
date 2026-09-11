@@ -426,15 +426,18 @@ input[type="time"].input::-webkit-calendar-picker-indicator {
 }
 
 @media (min-width: 800px) {
-  .table { gap: 0; border: 1.5px solid var(--line-strong); border-radius: var(--radius); overflow: hidden; }
+  /* Sem overflow:hidden aqui: se a tabela não couber, table-wrap deixa rolar
+     na horizontal em vez de esconder a coluna de Ações. */
+  .table { gap: 0; border: 1.5px solid var(--line-strong); border-radius: var(--radius); }
   .thead, .tr {
     display: grid;
-    grid-template-columns: 88px 48px 72px 72px minmax(120px, 1fr) 60px 48px 104px 92px 96px;
+    grid-template-columns: 104px 58px 76px 76px minmax(130px, 1fr) 64px 50px 106px 96px 108px;
     gap: 0;
     align-items: center;
     padding: 0;
     border: 0;
     border-radius: 0;
+    min-width: fit-content;
   }
   .thead {
     background: var(--ink);
@@ -566,10 +569,10 @@ input[type="time"].input::-webkit-calendar-picker-indicator {
 @media (min-width: 800px) {
   .table.extrato .thead,
   .table.extrato .tr {
-    grid-template-columns: 90px 48px 88px 88px minmax(120px, 1fr) 72px 50px 96px 96px;
+    grid-template-columns: 104px 58px 88px 88px minmax(130px, 1fr) 72px 50px 96px 96px;
   }
   .table.adminAccounts .thead,
   .table.adminAccounts .tr {
-    grid-template-columns: minmax(180px, 1fr) 78px 96px 78px 112px 92px 156px;
+    grid-template-columns: minmax(200px, 1fr) 78px 96px 78px 112px 92px 156px;
   }
 }

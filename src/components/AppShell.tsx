@@ -17,6 +17,8 @@ const NAV = [
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const path = usePathname();
   const [me, setMe] = useState<{ email: string; role: 'user' | 'admin' } | null>(null);
+  // Lançamentos e Extrato têm tabela larga (com Ações): dá mais espaço nessas.
+  const wide = path === '/' || path.startsWith('/extrato');
 
   useEffect(() => {
     apiGet<{ email: string; role: 'user' | 'admin' }>('/api/me')
@@ -58,7 +60,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <TapeRuler />
       </header>
 
-      <main className="container">{children}</main>
+      <main className={wide ? 'container wide' : 'container'}>{children}</main>
 
       <nav className="bnav">
         {NAV.map(({ href, label, Icon, exact }) => {
