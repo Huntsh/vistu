@@ -13,11 +13,36 @@ export function mapSettings(row: Record<string, unknown> | null | undefined): Se
   };
 }
 
-export async function loadSettings(): Promise<Settings> {
+/**
+ * Carrega a tabela de preços da conta. Se ainda não houver linha para a conta,
+ * cria uma com os valores padrão e a devolve.
+ */
+export async function loadSettings(accountId: string): Promise<Settings> {
   const sb = getSupabase();
-  const { data, error } = await sb.from('app_settings').select('*').eq('id', 1).maybeSingle();
+  const { data, error } = await sb
+    .from('app_settings')
+    .select('*')
+    .eq('account_id', accountId)
+    .maybeSingle();
   if (error) throw error;
-  return mapSettings(data as Record<string, unknown> | null);
+  if (data) return mapSettings(data as Record<string, unknown>);
+
+  const seed = { account_id: accountId, ...DEFAULT_SETTINGS, updated_at: new Date().toISOString() };
+  const { data: created, error: insErr } = await sb
+    .from('app_settings')
+    .insert(seed)
+    .select('*')
+    .maybeSingle();
+  if (insErr) {
+    // corrida: outra request criou primeiro — relê.
+    const { data: again } = await sb
+      .from('app_settings')
+      .select('*')
+      .eq('account_id', accountId)
+      .maybeSingle();
+    return mapSettings((again as Record<string, unknown> | null) ?? null);
+  }
+  return mapSettings(created as Record<string, unknown> | null);
 }
 
 export function mapInspection(row: Record<string, any>): Inspection {

@@ -2,17 +2,19 @@ import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { loadSettings } from '@/lib/db';
 import { calcValor } from '@/lib/calc';
+import { errorResponse, requireAccount } from '@/lib/session';
 import type { Status } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
-/** Recalcula o valor de TODOS os lançamentos usando a tabela de preços atual. */
-export async function POST() {
+/** Recalcula o valor de TODOS os lançamentos DA CONTA com a tabela de preços atual. */
+export async function POST(req: Request) {
   try {
-    const settings = await loadSettings();
+    const acc = await requireAccount(req);
+    const settings = await loadSettings(acc.id);
     const sb = getSupabase();
 
-    const { data, error } = await sb.from('inspections').select('*');
+    const { data, error } = await sb.from('inspections').select('*').eq('account_id', acc.id);
     if (error) throw error;
 
     const rows = (data ?? []).map((r: any) => ({
@@ -30,7 +32,7 @@ export async function POST() {
     }
 
     return NextResponse.json({ ok: true, updated });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Erro ao recalcular.' }, { status: 500 });
+  } catch (e) {
+    return errorResponse(e, 'Erro ao recalcular.');
   }
 }

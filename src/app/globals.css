@@ -560,3 +560,15 @@ input[type="time"].input::-webkit-calendar-picker-indicator {
   vertical-align: -3px;
 }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Tabelas específicas (colunas próprias no desktop) ───────────────────── */
+@media (min-width: 800px) {
+  .table.extrato .thead,
+  .table.extrato .tr {
+    grid-template-columns: 90px 48px 88px 88px minmax(120px, 1fr) 72px 50px 96px 96px;
+  }
+  .table.adminAccounts .thead,
+  .table.adminAccounts .tr {
+    grid-template-columns: minmax(180px, 1fr) 78px 96px 78px 112px 92px 156px;
+  }
+}

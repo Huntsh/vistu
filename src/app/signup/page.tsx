@@ -5,23 +5,30 @@ import Link from 'next/link';
 import TapeRuler from '@/components/TapeRuler';
 import { apiSend } from '@/lib/api';
 
-export default function LoginPage() {
+export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState('');
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErr('');
+    if (password.length < 6) {
+      setErr('A senha precisa de pelo menos 6 caracteres.');
+      return;
+    }
+    if (password !== confirm) {
+      setErr('As senhas não conferem.');
+      return;
+    }
     setLoading(true);
     try {
-      await apiSend('/api/login', 'POST', { email, password });
-      const params = new URLSearchParams(window.location.search);
-      const next = params.get('next');
-      window.location.href = next && next.startsWith('/') ? next : '/';
+      await apiSend('/api/signup', 'POST', { email, password });
+      window.location.href = '/';
     } catch (e: any) {
-      setErr(e?.message || 'Não foi possível entrar.');
+      setErr(e?.message || 'Não foi possível criar a conta.');
       setLoading(false);
     }
   }
@@ -31,8 +38,8 @@ export default function LoginPage() {
       <div className="loginCard">
         <TapeRuler count={6} />
         <div className="body">
-          <div className="mk">Vistorias</div>
-          <div className="sub">valores a receber</div>
+          <div className="mk">Criar conta</div>
+          <div className="sub">vistorias a receber</div>
 
           {err && <div className="error">{err}</div>}
 
@@ -59,17 +66,29 @@ export default function LoginPage() {
                 className="input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                autoComplete="current-password"
+                autoComplete="new-password"
+                required
+              />
+            </div>
+            <div className="field">
+              <label htmlFor="pw2">Confirmar senha</label>
+              <input
+                id="pw2"
+                type="password"
+                className="input"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                autoComplete="new-password"
                 required
               />
             </div>
             <button type="submit" className="btn btn--primary btn--block" disabled={loading}>
-              {loading ? <span className="spin" /> : 'Entrar'}
+              {loading ? <span className="spin" /> : 'Criar conta'}
             </button>
           </form>
 
           <div style={{ textAlign: 'center', marginTop: 16, fontSize: 13 }} className="muted">
-            Não tem conta? <Link href="/signup">Criar conta</Link>
+            Já tem conta? <Link href="/login">Entrar</Link>
           </div>
         </div>
       </div>

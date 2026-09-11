@@ -1,12 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
+import { errorResponse, requireAccount } from '@/lib/session';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
+    const acc = await requireAccount(req);
     const sb = getSupabase();
-    const { data, error } = await sb.from('inspections').select('imobiliaria');
+    const { data, error } = await sb
+      .from('inspections')
+      .select('imobiliaria')
+      .eq('account_id', acc.id);
     if (error) throw error;
 
     const seen = new Map<string, string>();
@@ -17,7 +22,7 @@ export async function GET() {
     const imobiliarias = [...seen.values()].sort((a, b) => a.localeCompare(b, 'pt-BR'));
 
     return NextResponse.json({ imobiliarias });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Erro ao carregar imobiliárias.' }, { status: 500 });
+  } catch (e) {
+    return errorResponse(e, 'Erro ao carregar imobiliárias.');
   }
 }

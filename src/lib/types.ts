@@ -1,5 +1,7 @@
 export type Status = 'realizada' | 'nao_realizada' | 'desmarcada';
 
+export type Role = 'user' | 'admin';
+
 export interface Inspection {
   id: string;
   num_registro: string;
@@ -12,6 +14,21 @@ export interface Inspection {
   status: Status;
   valor: number;
   created_at: string;
+  account_id?: string;
+}
+
+export interface Account {
+  id: string;
+  email: string;
+  role: Role;
+  is_active: boolean;
+  created_at: string;
+}
+
+/** Linha da lista de contas do painel admin (com agregados). */
+export interface AccountSummary extends Account {
+  inspections: number;
+  total_receber: number;
 }
 
 export interface Settings {

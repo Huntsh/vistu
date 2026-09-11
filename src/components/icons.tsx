@@ -63,6 +63,40 @@ export function IconEdit(p: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconDoc(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z" />
+      <path d="M14 3v5h5M9 13h6M9 17h6" />
+    </svg>
+  );
+}
+
+export function IconDownload(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M12 3v12M7 10l5 5 5-5M5 21h14" />
+    </svg>
+  );
+}
+
+export function IconShield(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" />
+      <path d="M9 12l2 2 4-4" />
+    </svg>
+  );
+}
+
+export function IconLogout(p: SVGProps<SVGSVGElement>) {
+  return (
+    <svg {...base} {...p}>
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  );
+}
+
 export function IconRuler(p: SVGProps<SVGSVGElement>) {
   return (
     <svg viewBox="0 0 24 24" fill="none" {...p}>

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getSupabase } from '@/lib/supabase';
 import { loadSettings, mapSettings } from '@/lib/db';
+import { errorResponse, requireAccount } from '@/lib/session';
 import type { Settings } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -13,15 +14,23 @@ const FIELDS: (keyof Settings)[] = [
   'valor_por_m2',
 ];
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
-    return NextResponse.json({ settings: await loadSettings() });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Erro ao carregar configurações.' }, { status: 500 });
+    const acc = await requireAccount(req);
+    return NextResponse.json({ settings: await loadSettings(acc.id) });
+  } catch (e) {
+    return errorResponse(e, 'Erro ao carregar configurações.');
   }
 }
 
 export async function PUT(req: Request) {
+  let acc;
+  try {
+    acc = await requireAccount(req);
+  } catch (e) {
+    return errorResponse(e);
+  }
+
   const body = await req.json().catch(() => ({}));
   const patch: Record<string, number> = {};
 
@@ -40,13 +49,16 @@ export async function PUT(req: Request) {
     const sb = getSupabase();
     const { data, error } = await sb
       .from('app_settings')
-      .upsert({ id: 1, ...patch, updated_at: new Date().toISOString() }, { onConflict: 'id' })
+      .upsert(
+        { account_id: acc.id, ...patch, updated_at: new Date().toISOString() },
+        { onConflict: 'account_id' },
+      )
       .select('*')
       .single();
     if (error) throw error;
 
     return NextResponse.json({ settings: mapSettings(data) });
-  } catch (e: any) {
-    return NextResponse.json({ error: e?.message || 'Erro ao salvar configurações.' }, { status: 500 });
+  } catch (e) {
+    return errorResponse(e, 'Erro ao salvar configurações.');
   }
 }

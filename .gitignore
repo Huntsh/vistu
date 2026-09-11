@@ -7,3 +7,8 @@ build
 next-env.d.ts
 *.log
 .DS_Store
+
+.vercel
+.env*
+*.tsbuildinfo
+supabase/.temp
